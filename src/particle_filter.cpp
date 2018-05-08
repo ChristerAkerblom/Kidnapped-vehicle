@@ -169,7 +169,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
       double trans_obs_x = transformed_observations[k].x;
       double trans_obs_y = transformed_observations[k].y;
       double trans_obs_id = transformed_observations[k].id;
-      double multi_prob = 1.0;
+      double multi_dist = 1.0;
 
       for (int l = 0; l < int(predicted_landmarks.size()); l++) {
         double pred_landmark_x = predicted_landmarks[l].x;
@@ -177,8 +177,8 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
         double pred_landmark_id = predicted_landmarks[l].id;
 
         if (trans_obs_id == pred_landmark_id) {
-          multi_prob = gauss_normalizer * exp(-1.0 * ((pow((trans_obs_x - pred_landmark_x), 2)/(2.0 * sigma_x_2)) + (pow((trans_obs_y - pred_landmark_y), 2)/(2.0 * sigma_y_2))));
-          particles[i].weight *= multi_prob;
+          multi_dist = gauss_normalizer * exp(-1.0 * ((pow((trans_obs_x - pred_landmark_x), 2)/(2.0 * sigma_x_2)) + (pow((trans_obs_y - pred_landmark_y), 2)/(2.0 * sigma_y_2))));
+          particles[i].weight *= multi_dist;
         }
       }
     }
