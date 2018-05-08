@@ -130,9 +130,9 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
   double weight_normalizer = 0.0;
 
   for (int i = 0; i < num_particles; i++) {
-    double particle_x = particles[i].x;
-    double particle_y = particles[i].y;
-    double particle_theta = particles[i].theta;
+    double p_x = particles[i].x;
+    double p_y = particles[i].y;
+    double p_theta = particles[i].theta;
 
     //transform observations from vehicle coordinates to map cooordinates
     vector<LandmarkObs> transformed_observations;
@@ -140,8 +140,8 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
     for (int j = 0; j < int(observations.size()); j++) {
       LandmarkObs transformed_obs;
       transformed_obs.id = j;
-      transformed_obs.x = particle_x + (cos(particle_theta) * observations[j].x) - (sin(particle_theta) * observations[j].y);
-      transformed_obs.y = particle_y + (sin(particle_theta) * observations[j].x) + (cos(particle_theta) * observations[j].y);
+      transformed_obs.x = p_x + (cos(p_theta) * observations[j].x) - (sin(p_theta) * observations[j].y);
+      transformed_obs.y = p_y + (sin(p_theta) * observations[j].x) + (cos(p_theta) * observations[j].y);
       transformed_observations.push_back(transformed_obs);
     }
 
@@ -149,7 +149,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
     vector<LandmarkObs> predicted_landmarks;
     for (int j = 0; j < int(map_landmarks.landmark_list.size()); j++) {
       Map::single_landmark_s current_landmark = map_landmarks.landmark_list[j];
-      if ((fabs((particle_x - current_landmark.x_f)) <= sensor_range) && (fabs((particle_y - current_landmark.y_f)) <= sensor_range)) {
+      if (dist(p_x, p_y, current_landmark.x_f, current_landmark.y_f) <= sensor_range) {
         predicted_landmarks.push_back(LandmarkObs {current_landmark.id_i, current_landmark.x_f, current_landmark.y_f});
       }
     }
@@ -157,13 +157,12 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
     dataAssociation(predicted_landmarks, transformed_observations);
 
     // calculate weights
-    particles[i].weight = 1.0;
-
     double sigma_x = std_landmark[0];
     double sigma_y = std_landmark[1];
     double sigma_x_2 = pow(sigma_x, 2);
     double sigma_y_2 = pow(sigma_y, 2);
     double gauss_normalizer = (1.0/(2.0 * M_PI * sigma_x * sigma_y));
+    particles[i].weight = 1.0;
 
     for (int k = 0; k < int(transformed_observations.size()); k++) {
       double trans_obs_x = transformed_observations[k].x;
@@ -196,11 +195,11 @@ void ParticleFilter::resample() {
 	// TODO: Resample particles with replacement with probability proportional to their weight.
 	// NOTE: You may find std::discrete_distribution helpful here.
 	//   http://en.cppreference.com/w/cpp/numeric/random/discrete_distribution
-    discrete_distribution<> d(ParticleFilter::weights.begin(), ParticleFilter::weights.end());
+    discrete_distribution<> disc_dist(ParticleFilter::weights.begin(), ParticleFilter::weights.end());
     vector<Particle> resampled_particles;
     for (int i=0; i < ParticleFilter::num_particles; i++)
     {
-        resampled_particles.push_back(particles[d(gen)]);
+        resampled_particles.push_back(particles[disc_dist(gen)]);
     }
     particles = resampled_particles;
 
